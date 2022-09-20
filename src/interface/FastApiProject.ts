@@ -86,7 +86,7 @@ export default async function (ctx: NextContext<any>){
 }`
     }
 
-    public makeDockerFile(distPath: string, distIndex: string) {
+    public makeDockerFile(distPath: string, distIndex: string, npmrcPath: string) {
         var isBundle = Boolean(this.build?.bundle);
         var dockerFile = "";
         var environments = [
@@ -103,10 +103,8 @@ RUN chmod +x index\nENTRYPOINT ./index
         }
         else {
             dockerFile = `FROM node:16 as build
-${environments.map(e => `ENV ${e}`).join("\n")}
 WORKDIR /app
 COPY package.json .
-COPY package-lock.json .
 RUN npm install --production --legacy-peer-deps
 
 FROM node:16-slim

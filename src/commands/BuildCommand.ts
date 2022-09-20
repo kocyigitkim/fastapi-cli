@@ -28,6 +28,7 @@ export function RegisterBuildCommand() {
                 args.output = process.cwd();
             }
             var outputDir = path.resolve(args.output);
+            var sourceDir = process.cwd();
             if (!fs.existsSync(outputDir)) {
                 fs.mkdirSync(outputDir, { recursive: true });
             }
@@ -136,7 +137,26 @@ export function RegisterBuildCommand() {
             }
 
             if (project.build?.mode == FastApiBuildMode.DockerFile) {
-                project.makeDockerFile(distPath, distIndex);
+                var npmrcPath = path.join(sourceDir, ".npmrc");
+                var globalNpmrcPath = path.resolve('~/.npmrc');
+                if (!fs.existsSync(npmrcPath) && !fs.existsSync(globalNpmrcPath)) {
+                    npmrcPath = undefined;
+                }
+                else {
+                    // copy .npmrc to dist
+
+                    var mergedNpmrc = "";
+                    if (globalNpmrcPath) {
+                        mergedNpmrc += fs.readFileSync(globalNpmrcPath, 'utf-8');
+                    }
+                    if (npmrcPath) {
+                        mergedNpmrc += fs.readFileSync(npmrcPath, 'utf-8');
+                    }
+
+                    fs.writeFileSync(path.join(distPath, ".npmrc"), mergedNpmrc);
+
+                }
+                project.makeDockerFile(distPath, distIndex, npmrcPath);
             }
         });
 }
