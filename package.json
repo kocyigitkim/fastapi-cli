@@ -2,10 +2,16 @@
   "name": "fastapi-cli",
   "version": "1.0.0",
   "description": "Fast Api Command Line Tool",
-  "main": "index.js",
+  "main": "bin/index.js",
+  "files": [
+    "bin"
+  ],
   "scripts": {
-    "start": "node dist/index.js",
-    "build": "rimraf dist && tsc"
+    "build": "tsc",
+    "start": "node index.js"
+  },
+  "bin": {
+    "fastapi": "bin/index.js"
   },
   "repository": {
     "type": "git",
@@ -18,12 +24,15 @@
   },
   "homepage": "https://github.com/kocyigitkim/fastapi-cli#readme",
   "devDependencies": {
+    "@types/commander": "^2.12.2",
     "@types/node": "^17.0.23",
+    "@types/npm": "^7.19.0",
     "rimraf": "^3.0.2",
     "typescript": "^4.6.2"
   },
   "dependencies": {
-    "cmd-execute": "^1.0.2",
-    "commander": "^9.4.0"
+    "cmd-execute": "^1.0.3",
+    "commander": "^9.4.0",
+    "npm": "^8.19.2"
   }
 }

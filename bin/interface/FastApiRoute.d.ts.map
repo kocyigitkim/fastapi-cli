@@ -1,0 +1,1 @@
+{"version":3,"file":"FastApiRoute.d.ts","sourceRoot":"","sources":["../../src/interface/FastApiRoute.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,gBAAgB,EAAE,MAAM,oBAAoB,CAAC;AAGtD,qBAAa,YAAY;IACd,IAAI,EAAE,gBAAgB,CAAC;IACvB,IAAI,EAAE,MAAM,CAAC;CACvB"}

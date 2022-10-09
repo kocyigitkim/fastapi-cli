@@ -1,0 +1,1 @@
+{"version":3,"file":"FastApiBuild.d.ts","sourceRoot":"","sources":["../../src/interface/FastApiBuild.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,gBAAgB,EAAE,MAAM,oBAAoB,CAAC;AAGtD,qBAAa,YAAY;IACd,IAAI,EAAE,gBAAgB,CAAC;IACvB,MAAM,EAAE,MAAM,CAAC;IACf,QAAQ,EAAE,OAAO,CAAC;IAClB,MAAM,EAAE,OAAO,CAAC;CAC1B"}

@@ -1,0 +1,1 @@
+{"version":3,"file":"FastApiDependency.d.ts","sourceRoot":"","sources":["../../src/interface/FastApiDependency.ts"],"names":[],"mappings":"AACA,qBAAa,iBAAiB;IACnB,IAAI,EAAE,MAAM,CAAC;IACb,OAAO,EAAE,MAAM,CAAC;IAChB,UAAU,CAAC,EAAE,MAAM,CAAC;IACpB,GAAG,CAAC,EAAE,OAAO,CAAC;CACxB"}
