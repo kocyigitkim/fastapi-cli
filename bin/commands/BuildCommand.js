@@ -16,6 +16,7 @@ function RegisterBuildCommand() {
     commander_1.program.command("build")
         .option("-p, --project [path]", "Path to project file")
         .option("-o, --output [path]", "Output directory")
+        .option("-d, --debug", "Debug mode")
         .description("Build the project")
         .action(async (args) => {
         var _a, _b, _c;
@@ -28,6 +29,7 @@ function RegisterBuildCommand() {
         if (!(args === null || args === void 0 ? void 0 : args.output)) {
             args.output = process.cwd();
         }
+        const isDebugMode = Boolean((args === null || args === void 0 ? void 0 : args.debug) || false);
         var outputDir = path_1.default.resolve(args.output);
         var sourceDir = process.cwd();
         if (!fs_1.default.existsSync(outputDir)) {
@@ -51,6 +53,10 @@ function RegisterBuildCommand() {
             cwd: process.cwd()
         }).run(console.log, console.error);
         console.log('Typescript build complete');
+        if (isDebugMode) {
+            console.log('Debug mode enabled, skipping bundling');
+            return;
+        }
         // collect router paths to variable
         var routes = [];
         var socketRoutes = [];

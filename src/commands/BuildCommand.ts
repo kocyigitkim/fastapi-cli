@@ -14,10 +14,12 @@ export function RegisterBuildCommand() {
     program.command("build")
         .option("-p, --project [path]", "Path to project file")
         .option("-o, --output [path]", "Output directory")
+        .option("-d, --debug", "Debug mode")
         .description("Build the project")
         .action(async (args: {
             output?: string,
-            project?: string
+            project?: string,
+            debug?: boolean
         }) => {
             if (!args) args = {};
             if (args?.project) {
@@ -27,6 +29,7 @@ export function RegisterBuildCommand() {
             if (!args?.output) {
                 args.output = process.cwd();
             }
+            const isDebugMode = Boolean(args?.debug || false);
             var outputDir = path.resolve(args.output);
             var sourceDir = process.cwd();
             if (!fs.existsSync(outputDir)) {
@@ -53,6 +56,11 @@ export function RegisterBuildCommand() {
                 cwd: process.cwd()
             }).run(console.log, console.error);
             console.log('Typescript build complete');
+
+            if (isDebugMode) {
+                console.log('Debug mode enabled, skipping bundling');
+                return;
+            }
 
             // collect router paths to variable
             var routes: FastApiRoutePath[] = [];

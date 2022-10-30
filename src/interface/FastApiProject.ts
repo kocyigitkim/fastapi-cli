@@ -33,6 +33,8 @@ export class FastApiProject {
                 "outDir": "dist",
                 "noImplicitUseStrict": true,
                 "declaration": true,
+                "declarationMap": true,
+                "declarationDir": "dist/ts-types",
                 "esModuleInterop": true,
                 "forceConsistentCasingInFileNames": true,
                 "strict": false,
@@ -117,6 +119,45 @@ COPY . .
 ENTRYPOINT ["node", "index"]`
         }
         fs.writeFileSync(path.join(distPath, "Dockerfile"), dockerFile);
+    }
+    public buildVSCodeLaunch() {
+        return `{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug",
+            "type": "node",
+            "request": "launch",
+            "program": "\${workspaceFolder}/src/index.ts",
+            "preLaunchTask": "npm: build",
+            "cwd": "\${workspaceFolder}",
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "sourceMaps": true,
+            "outFiles": [
+                "\${workspaceFolder}/dist/**/*.js"
+            ]
+        }
+    ]
+}`
+    }
+    public buildVSCodeTasks() {
+        return `{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "npm: prepare-debug",
+            "type": "npm",
+            "script": "prepare-debug",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}`
     }
 }
 

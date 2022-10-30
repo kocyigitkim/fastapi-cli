@@ -30,6 +30,8 @@ class FastApiProject {
                 "outDir": "dist",
                 "noImplicitUseStrict": true,
                 "declaration": true,
+                "declarationMap": true,
+                "declarationDir": "dist/ts-types",
                 "esModuleInterop": true,
                 "forceConsistentCasingInFileNames": true,
                 "strict": false,
@@ -113,6 +115,45 @@ COPY . .
 ENTRYPOINT ["node", "index"]`;
         }
         fs_1.default.writeFileSync(path_1.default.join(distPath, "Dockerfile"), dockerFile);
+    }
+    buildVSCodeLaunch() {
+        return `{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug",
+            "type": "node",
+            "request": "launch",
+            "program": "\${workspaceFolder}/src/index.ts",
+            "preLaunchTask": "npm: build",
+            "cwd": "\${workspaceFolder}",
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "sourceMaps": true,
+            "outFiles": [
+                "\${workspaceFolder}/dist/**/*.js"
+            ]
+        }
+    ]
+}`;
+    }
+    buildVSCodeTasks() {
+        return `{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "npm: prepare-debug",
+            "type": "npm",
+            "script": "prepare-debug",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}`;
     }
 }
 exports.FastApiProject = FastApiProject;

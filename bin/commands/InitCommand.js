@@ -84,7 +84,7 @@ function RegisterInitCommand() {
             scripts: {
                 "start": "fastapi start",
                 "build": "fastapi build",
-                "dev": "fastapi dev"
+                "prepare-debug": "fastapi build --debug"
             },
             keywords: [],
             dependencies: {
@@ -111,6 +111,16 @@ function RegisterInitCommand() {
         existingPackageJson.keywords = packageJson.keywords;
         packageJson = existingPackageJson;
         fs_1.default.writeFileSync(path_1.default.join(outputDir, "package.json"), JSON.stringify(packageJson, null, 2));
+        // ? Create vscode environment
+        if (!fs_1.default.existsSync(path_1.default.join(outputDir, ".vscode"))) {
+            fs_1.default.mkdirSync(path_1.default.join(outputDir, ".vscode"), { recursive: true });
+        }
+        if (!fs_1.default.existsSync(path_1.default.join(outputDir, ".vscode", "launch.json"))) {
+            fs_1.default.writeFileSync(path_1.default.join(outputDir, ".vscode", "launch.json"), project.buildVSCodeLaunch());
+        }
+        if (!fs_1.default.existsSync(path_1.default.join(outputDir, ".vscode", "tasks.json"))) {
+            fs_1.default.writeFileSync(path_1.default.join(outputDir, ".vscode", "tasks.json"), project.buildVSCodeTasks());
+        }
         console.log("Installing dependencies...");
         await new cmd_execute_1.ShellProcess({
             path: "npm",
