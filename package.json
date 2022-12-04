@@ -1,13 +1,13 @@
 {
   "name": "fastapi-cli",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Fast Api Command Line Tool",
   "main": "bin/index.js",
   "files": [
     "bin"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "rimraf bin && tsc",
     "start": "node index.js"
   },
   "bin": {

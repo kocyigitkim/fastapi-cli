@@ -17,9 +17,10 @@ function RegisterBuildCommand() {
         .option("-p, --project [path]", "Path to project file")
         .option("-o, --output [path]", "Output directory")
         .option("-d, --debug", "Debug mode")
+        .option("-os, --os [os]", "OS to build for")
         .description("Build the project")
         .action(async (args) => {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
         if (!args)
             args = {};
         if (args === null || args === void 0 ? void 0 : args.project) {
@@ -112,10 +113,18 @@ function RegisterBuildCommand() {
             }).run(console.log, console.error);
         }
         if ((_b = project.build) === null || _b === void 0 ? void 0 : _b.bundle) {
+            var osList = {
+                'lin': 'node16-alpine-x64',
+                'linux': "node16-alpine-x64",
+                'win': "node16-win-x64",
+                'windows': "node16-win-x64",
+                'mac': "node16-macos-x64",
+                'macos': "node16-macos-x64",
+            };
             // bundle js with node modules into one file
             await new cmd_execute_1.ShellProcess({
                 path: "npx",
-                args: ["pkg", "-t", "node16-alpine-x64", "dist/index.min.js", "--output", "bundle/index"],
+                args: ["pkg", "-t", osList[args.os || "linux"], ((_c = project.build) === null || _c === void 0 ? void 0 : _c.compress) ? "dist/index.min.js" : "dist/index.js", "--output", "bundle/index"],
                 cwd: process.cwd()
             }).run(console.log, console.error);
             distPath = path_1.default.join(outputDir, "bundle");
@@ -134,7 +143,7 @@ function RegisterBuildCommand() {
             // copy package-lock.json
             fs_1.default.copyFileSync(path_1.default.join(outputDir, "package-lock.json"), path_1.default.join(distPath, "package-lock.json"));
         }
-        if (((_c = project.build) === null || _c === void 0 ? void 0 : _c.mode) == FastApiBuildMode_1.FastApiBuildMode.DockerFile) {
+        if (((_d = project.build) === null || _d === void 0 ? void 0 : _d.mode) == FastApiBuildMode_1.FastApiBuildMode.DockerFile) {
             var npmrcPath = path_1.default.join(sourceDir, ".npmrc");
             var globalNpmrcPath = path_1.default.resolve('~/.npmrc');
             if (!fs_1.default.existsSync(npmrcPath) && !fs_1.default.existsSync(globalNpmrcPath)) {

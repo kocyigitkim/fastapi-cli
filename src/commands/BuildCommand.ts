@@ -15,11 +15,13 @@ export function RegisterBuildCommand() {
         .option("-p, --project [path]", "Path to project file")
         .option("-o, --output [path]", "Output directory")
         .option("-d, --debug", "Debug mode")
+        .option("-os, --os [os]", "OS to build for")
         .description("Build the project")
         .action(async (args: {
             output?: string,
             project?: string,
-            debug?: boolean
+            debug?: boolean,
+            os?: string
         }) => {
             if (!args) args = {};
             if (args?.project) {
@@ -121,10 +123,18 @@ export function RegisterBuildCommand() {
             }
 
             if (project.build?.bundle) {
+                var osList = {
+                    'lin': 'node16-alpine-x64',
+                    'linux': "node16-alpine-x64",
+                    'win': "node16-win-x64",
+                    'windows': "node16-win-x64",
+                    'mac': "node16-macos-x64",
+                    'macos': "node16-macos-x64",
+                }
                 // bundle js with node modules into one file
                 await new ShellProcess({
                     path: "npx",
-                    args: ["pkg", "-t", "node16-alpine-x64", "dist/index.min.js", "--output", "bundle/index"],
+                    args: ["pkg", "-t", osList[args.os || "linux"], project.build?.compress ? "dist/index.min.js" : "dist/index.js", "--output", "bundle/index"],
                     cwd: process.cwd()
                 }).run(console.log, console.error);
                 distPath = path.join(outputDir, "bundle");

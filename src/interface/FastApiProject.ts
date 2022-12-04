@@ -129,10 +129,12 @@ ENTRYPOINT ["node", "index"]`
             "type": "node",
             "request": "launch",
             "program": "\${workspaceFolder}/src/index.ts",
-            "preLaunchTask": "npm: build",
+            "preLaunchTask": "npm: prepare-debug",
             "cwd": "\${workspaceFolder}",
             "env": {
-                "NODE_ENV": "development"
+                "NODE_ENV": "development",
+                "PORT": "5000",
+                "DEBUG": "true"
             },
             "sourceMaps": true,
             "outFiles": [

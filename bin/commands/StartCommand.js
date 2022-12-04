@@ -12,10 +12,12 @@ function RegisterStartCommand() {
     commander_1.program.command("start")
         .alias("dev")
         .option("-p, --port <port>", "Port to run the server on")
+        .option("-d, --debug", "debug the server")
         .description("Start fast api server or run in development mode")
         .action(async (args) => {
         var _a, _b;
         var port = args.port;
+        var isdebug = args.debug;
         // ? Load Package.json
         const packageJson = JSON.parse(fs_1.default.readFileSync(path_1.default.join(process.cwd(), "package.json"), 'utf-8'));
         // ? Load fastapi.json
@@ -50,9 +52,12 @@ function RegisterStartCommand() {
         console.log("Running...");
         var hasError = false;
         // defines skip files
+        if (isdebug) {
+            console.log("Debug mode enabled");
+        }
         await new cmd_execute_1.ShellProcess({
             path: "node",
-            args: [outputFileName, "--skip", "dist/**/*.d.ts"],
+            args: isdebug ? (["--inspect", outputFileName, "--skip", "dist/**/*.d.ts"]) : ([outputFileName, "--skip", "dist/**/*.d.ts"]),
             cwd: process.cwd(),
             env: {
                 PORT: port,

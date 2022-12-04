@@ -11,9 +11,12 @@ export function RegisterWatchCommand() {
     program.command("watch")
         .alias("dev")
         .option("-p, --port <port>", "Port to run the server on")
-        .option("-dp, --debug-port <port>", "Port to debug the server on")
-        .description("Watch fast api server or run in development mode")
+        .option("-d, --debug", "debug the server")
+        .description("[Under construction] Watch fast api server or run in development mode")
         .action(async (args) => {
+            console.log("Under construction");
+            // process.exit(0);
+            // return;
             var port = args.port;
             // ? Load Package.json
             const packageJson = JSON.parse(fs.readFileSync(path.join(process.cwd(), "package.json"), 'utf-8'));
@@ -31,59 +34,55 @@ export function RegisterWatchCommand() {
 
             // ? Run project
             console.log("Running...");
-            var proc = null;
-
-            var isBusy = false;
+            var proc: ShellProcess = null;
+            var isDebug = args.debug;
             var isFirstRun = true;
-            async function restartServer() {
-                if (isBusy) return;
-
-                isBusy = true;
+            async function startServer() {
                 if (proc) {
-                    proc.kill();
-                    proc = null;
+                    (proc as any).currentProcess.kill("SIGTERM");
+                    // wait for process to exit
+                    while (!(proc as any).currentProcess.killed) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
                 }
 
                 var outputFileName = await CleanAndBuild(packageJson, fastapiJson, isFirstRun);
                 isFirstRun = false;
-                // run script in debug mode
-                proc = spawn("node", ["--inspect", outputFileName, "-p", args.debugPort || 9229], {
+
+                proc = new ShellProcess({
+                    path: "nodemon",
+                    args: isDebug ? (
+                        ["-x", '"fastapi start -d"', "-w", "src", "-w", "fastapi.json", "-w", "package.json", "-w", "tsconfig.json", "-e", "ts,json,js"]
+                    ) : (["start", "--watch", "src", "--ext", "ts,js,json", "--exec", "fastapi"]),
                     cwd: process.cwd(),
-                    shell: true,
                     env: {
                         PORT: port,
                         NODE_ENV: "development"
                     }
-                });
-                proc.on('error', (err) => {
-                    console.error(err);
-                });
-                proc.stdout.on('data', (data) => {
-                    data = data?.toString()?.trim();
-                    if (data && data.length > 0) {
-                        console.log(data);
+                } as any);
+                await proc.run((d) => {
+                    var lines = (d || "").split("\n");
+                    for (var i = 0; i < lines.length; i++) {
+                        var line = lines[i];
+                        if (line.trim().length > 0) {
+                            console.log(line);
+                        }
                     }
-                });
-                proc.stderr.on('data', (data) => {
-                    data = data?.toString()?.trim();
-                    if (data && data.length > 0) {
-                        console.error(data);
+                }, (d) => {
+                    var lines = (d || "").split("\n");
+                    for (var i = 0; i < lines.length; i++) {
+                        var line = lines[i];
+                        if (line.trim().length > 0) {
+                            console.error(line);
+                        }
                     }
-                });
-                proc.on('close', (code) => {
-                    console.log(`Server exited with code ${code}`);
-                });
+                }).catch(console.error);
 
-                isBusy = false;
             }
             console.log("Watching...");
             console.log(path.join(process.cwd(), "src"));
-            fs.watch(path.join(process.cwd(), "src"), { recursive: true }, async (eventType, filename) => {
-                console.log(`File ${filename} changed`);
-                console.log(`Restarting server...`);
-                restartServer();
-            });
-            restartServer();
+
+            startServer();
             console.log("Press Ctrl+C to stop");
             while (true) {
                 await new Promise(resolve => setTimeout(resolve, 1000));

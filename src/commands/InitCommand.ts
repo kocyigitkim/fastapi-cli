@@ -76,18 +76,18 @@ export function RegisterInitCommand() {
             }
 
             console.log("Project created successfully");
-
             console.log("Building package.json");
 
             var packageJson = {
                 name: project.name,
                 version: "1.0.0",
-                description: "",
+                description: "Project created with fastapi-cli",
                 main: "dist/index.js",
+                types: "dist/ts-types/index.d.ts",
                 scripts: {
                     "start": "fastapi start",
                     "build": "fastapi build",
-                    "prepare-debug": "fastapi build --debug"
+                    "prepare-debug": "fastapi build -d"
                 },
                 keywords: [],
                 dependencies: {
@@ -111,6 +111,7 @@ export function RegisterInitCommand() {
             existingPackageJson.version = packageJson.version;
             existingPackageJson.description = packageJson.description;
             existingPackageJson.main = packageJson.main;
+            existingPackageJson.types = packageJson.types;
             existingPackageJson.scripts = { ...existingPackageJson.scripts, ...packageJson.scripts };
             existingPackageJson.keywords = packageJson.keywords;
             packageJson = existingPackageJson;
