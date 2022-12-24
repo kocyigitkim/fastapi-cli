@@ -5,6 +5,7 @@ import { RegisterBuildCommand } from "./commands/BuildCommand";
 import { RegisterInitCommand } from "./commands/InitCommand";
 import { RegisterWatchCommand } from "./commands/WatchCommand";
 import { RegisterCreateCommand } from "./commands/CreateCommand";
+import { ClientCommands } from "./commands/ClientCommands";
 
 async function main() {
 
@@ -13,6 +14,7 @@ async function main() {
     RegisterBuildCommand();
     RegisterStartCommand();
     RegisterWatchCommand();
+    ClientCommands();
 
     var cmd = await program.parseAsync().catch(console.error);
     if (cmd && cmd.commands.length == 0) {

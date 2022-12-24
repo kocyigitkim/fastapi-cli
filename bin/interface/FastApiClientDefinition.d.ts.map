@@ -1,0 +1,1 @@
+{"version":3,"file":"FastApiClientDefinition.d.ts","sourceRoot":"","sources":["../../src/interface/FastApiClientDefinition.ts"],"names":[],"mappings":"AAAA,qBAAa,uBAAuB;;IAGzB,GAAG,EAAE,MAAM,CAAC;IACZ,UAAU,EAAE,OAAO,CAAC;IACpB,UAAU,EAAE,MAAM,CAAC;IAEnB,IAAI;WAGG,IAAI,CAAC,OAAO,EAAE,MAAM;CAQrC"}

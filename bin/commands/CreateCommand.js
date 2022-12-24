@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RegisterCreateCommand = void 0;
 const commander_1 = require("commander");
-const FastApiProject_1 = require("interface/FastApiProject");
+const FastApiProject_1 = require("../interface/FastApiProject");
 const fs_1 = __importDefault(require("fs"));
 function RegisterCreateCommand() {
     commander_1.program.command("create <path>")

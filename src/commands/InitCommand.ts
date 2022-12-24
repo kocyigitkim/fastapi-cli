@@ -20,6 +20,7 @@ export function RegisterInitCommand() {
             if (!args?.output) {
                 args.output = process.cwd();
             }
+            var projectDir = path.join(args.output, args.name);
             if (!args?.name) {
                 // find package.json and retrieve name from package.json
                 try {
@@ -27,7 +28,17 @@ export function RegisterInitCommand() {
                     args.name = packageJson.name;
                 } catch (err) {
                     console.error("Could not find package.json in current directory");
-                    process.exit(1);
+                    if (args.name) {
+                        fs.mkdirSync(projectDir, { recursive: true });
+                        process.chdir(projectDir);
+                        await new ShellProcess({
+                            path: "npm",
+                            args: ["init", "-y"]
+                        }).run(console.log, console.error);
+                    }
+                    else {
+                        process.exit(1);
+                    }
                 }
             }
 
@@ -52,27 +63,26 @@ export function RegisterInitCommand() {
                 }
             ];
 
-            var outputDir = path.resolve(args.output);
-            if (!fs.existsSync(outputDir)) {
-                fs.mkdirSync(outputDir, { recursive: true });
+            if (!fs.existsSync(projectDir)) {
+                fs.mkdirSync(projectDir, { recursive: true });
             }
 
-            fs.writeFileSync(path.join(outputDir, "fastapi.json"), project.save());
-            if (!fs.existsSync(path.join(outputDir, "tsconfig.json"))) {
-                fs.writeFileSync(path.join(outputDir, "tsconfig.json"), project.buildTSConfig());
+            fs.writeFileSync(path.join(projectDir, "fastapi.json"), project.save());
+            if (!fs.existsSync(path.join(projectDir, "tsconfig.json"))) {
+                fs.writeFileSync(path.join(projectDir, "tsconfig.json"), project.buildTSConfig());
             }
-            if (!fs.existsSync(path.join(outputDir, "src"))) {
-                fs.mkdirSync(path.join(outputDir, "src"), { recursive: true });
+            if (!fs.existsSync(path.join(projectDir, "src"))) {
+                fs.mkdirSync(path.join(projectDir, "src"), { recursive: true });
             }
-            if (!fs.existsSync(path.join(outputDir, "src", "routers"))) {
-                fs.mkdirSync(path.join(outputDir, "src", "routers"), { recursive: true });
-                if (!fs.existsSync(path.join(outputDir, "src", "routers", "index.ts"))) {
-                    fs.writeFileSync(path.join(outputDir, "src", "routers", "index.ts"), project.buildHelloWorld());
+            if (!fs.existsSync(path.join(projectDir, "src", "routers"))) {
+                fs.mkdirSync(path.join(projectDir, "src", "routers"), { recursive: true });
+                if (!fs.existsSync(path.join(projectDir, "src", "routers", "index.ts"))) {
+                    fs.writeFileSync(path.join(projectDir, "src", "routers", "index.ts"), project.buildHelloWorld());
                 }
             }
 
-            if (!fs.existsSync(path.join(outputDir, "src", "index.ts"))) {
-                fs.writeFileSync(path.join(outputDir, "src", "index.ts"), project.buildIndex());
+            if (!fs.existsSync(path.join(projectDir, "src", "index.ts"))) {
+                fs.writeFileSync(path.join(projectDir, "src", "index.ts"), project.buildIndex());
             }
 
             console.log("Project created successfully");
@@ -104,7 +114,7 @@ export function RegisterInitCommand() {
                 }
             };
 
-            var existingPackageJson = fs.existsSync(path.join(outputDir, "package.json")) ? JSON.parse(fs.readFileSync(path.join(outputDir, "package.json"), 'utf-8')) : {};
+            var existingPackageJson = fs.existsSync(path.join(projectDir, "package.json")) ? JSON.parse(fs.readFileSync(path.join(projectDir, "package.json"), 'utf-8')) : {};
             existingPackageJson.dependencies = { ...existingPackageJson.dependencies, ...packageJson.dependencies };
             existingPackageJson.devDependencies = { ...existingPackageJson.devDependencies, ...packageJson.devDependencies };
             existingPackageJson.name = packageJson.name;
@@ -115,8 +125,9 @@ export function RegisterInitCommand() {
             existingPackageJson.scripts = { ...existingPackageJson.scripts, ...packageJson.scripts };
             existingPackageJson.keywords = packageJson.keywords;
             packageJson = existingPackageJson;
+            var outputDir = projectDir;
             fs.writeFileSync(path.join(outputDir, "package.json"), JSON.stringify(packageJson, null, 2));
-            
+
             // ? Create vscode environment
             if (!fs.existsSync(path.join(outputDir, ".vscode"))) {
                 fs.mkdirSync(path.join(outputDir, ".vscode"), { recursive: true });
@@ -132,9 +143,9 @@ export function RegisterInitCommand() {
             await new ShellProcess({
                 path: "npm",
                 args: ["install"],
-                cwd: outputDir
+                cwd: projectDir
             }).run(console.log, console.error).catch(console.error);
 
-            console.log(project, args, outputDir);
+            console.log(project, args, projectDir);
         });
 }

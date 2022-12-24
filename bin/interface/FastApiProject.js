@@ -99,7 +99,7 @@ WORKDIR /app
 COPY . .
 ${environments.map(e => `ENV ${e}`).join("\n")}
 RUN chmod +x index\nENTRYPOINT ./index
-                }`;
+`;
         }
         else {
             dockerFile = `FROM node:16 as build

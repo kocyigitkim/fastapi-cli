@@ -37,8 +37,9 @@ export function RegisterBuildCommand() {
             if (!fs.existsSync(outputDir)) {
                 fs.mkdirSync(outputDir, { recursive: true });
             }
-            var project = FastApiProject.open(fs.readFileSync(path.join(outputDir, "fastapi.json"), 'utf-8'));
 
+            // Loading project
+            var project = FastApiProject.open(fs.readFileSync(path.join(outputDir, "fastapi.json"), 'utf-8'));
 
             // Remove dist folder
             if (fs.existsSync(path.join(outputDir, "dist"))) {
@@ -143,11 +144,11 @@ export function RegisterBuildCommand() {
             else {
                 distIndex = path.join(distPath, "index.js");
                 // remove current index.js
-                if (fs.existsSync(path.join(distPath, "index.js"))) {
+                if (fs.existsSync(path.join(distPath, "index.js")) && project.build?.compress) {
                     fs.unlinkSync(path.join(distPath, "index.js"));
                 }
                 // rename index.min.js to index.js
-                fs.renameSync(path.join(outputDir, "dist", "index.min.js"), distIndex);
+                if (project.build?.compress) fs.renameSync(path.join(outputDir, "dist", "index.min.js"), distIndex);
                 // copy package.json
                 fs.copyFileSync(path.join(outputDir, "package.json"), path.join(distPath, "package.json"));
                 // copy package-lock.json

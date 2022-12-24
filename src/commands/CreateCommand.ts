@@ -1,5 +1,5 @@
 import { program } from "commander";
-import { FastApiProject } from "interface/FastApiProject";
+import { FastApiProject } from "../interface/FastApiProject";
 import fs from "fs";
 import path from "path";
 

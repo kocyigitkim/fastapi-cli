@@ -1,0 +1,1 @@
+{"version":3,"file":"ClientCommands.js","sourceRoot":"","sources":["../../src/commands/ClientCommands.ts"],"names":[],"mappings":";;;AAAA,yCAAmC;AACnC,8EAA8E;AAE9E,SAAgB,cAAc;IAC1B,MAAM,MAAM,GAAG,mBAAO,CAAC,OAAO,CAAC,QAAQ,CAAC,CAAA;IACxC,MAAM,CAAC,WAAW,CAAC,wBAAwB,CAAC,CAAA;IAC5C,IAAA,6CAAuB,EAAC,MAAM,CAAC,CAAC;AACpC,CAAC;AAJD,wCAIC"}

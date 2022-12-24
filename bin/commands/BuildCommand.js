@@ -20,7 +20,7 @@ function RegisterBuildCommand() {
         .option("-os, --os [os]", "OS to build for")
         .description("Build the project")
         .action(async (args) => {
-        var _a, _b, _c, _d;
+        var _a, _b, _c, _d, _e, _f;
         if (!args)
             args = {};
         if (args === null || args === void 0 ? void 0 : args.project) {
@@ -36,6 +36,7 @@ function RegisterBuildCommand() {
         if (!fs_1.default.existsSync(outputDir)) {
             fs_1.default.mkdirSync(outputDir, { recursive: true });
         }
+        // Loading project
         var project = FastApiProject_1.FastApiProject.open(fs_1.default.readFileSync(path_1.default.join(outputDir, "fastapi.json"), 'utf-8'));
         // Remove dist folder
         if (fs_1.default.existsSync(path_1.default.join(outputDir, "dist"))) {
@@ -133,17 +134,18 @@ function RegisterBuildCommand() {
         else {
             distIndex = path_1.default.join(distPath, "index.js");
             // remove current index.js
-            if (fs_1.default.existsSync(path_1.default.join(distPath, "index.js"))) {
+            if (fs_1.default.existsSync(path_1.default.join(distPath, "index.js")) && ((_d = project.build) === null || _d === void 0 ? void 0 : _d.compress)) {
                 fs_1.default.unlinkSync(path_1.default.join(distPath, "index.js"));
             }
             // rename index.min.js to index.js
-            fs_1.default.renameSync(path_1.default.join(outputDir, "dist", "index.min.js"), distIndex);
+            if ((_e = project.build) === null || _e === void 0 ? void 0 : _e.compress)
+                fs_1.default.renameSync(path_1.default.join(outputDir, "dist", "index.min.js"), distIndex);
             // copy package.json
             fs_1.default.copyFileSync(path_1.default.join(outputDir, "package.json"), path_1.default.join(distPath, "package.json"));
             // copy package-lock.json
             fs_1.default.copyFileSync(path_1.default.join(outputDir, "package-lock.json"), path_1.default.join(distPath, "package-lock.json"));
         }
-        if (((_d = project.build) === null || _d === void 0 ? void 0 : _d.mode) == FastApiBuildMode_1.FastApiBuildMode.DockerFile) {
+        if (((_f = project.build) === null || _f === void 0 ? void 0 : _f.mode) == FastApiBuildMode_1.FastApiBuildMode.DockerFile) {
             var npmrcPath = path_1.default.join(sourceDir, ".npmrc");
             var globalNpmrcPath = path_1.default.resolve('~/.npmrc');
             if (!fs_1.default.existsSync(npmrcPath) && !fs_1.default.existsSync(globalNpmrcPath)) {
