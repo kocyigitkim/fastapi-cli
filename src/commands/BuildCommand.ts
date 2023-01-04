@@ -15,7 +15,7 @@ export function RegisterBuildCommand() {
         .option("-p, --project [path]", "Path to project file")
         .option("-o, --output [path]", "Output directory")
         .option("-d, --debug", "Debug mode")
-        .option("-os, --os [os]", "OS to build for")
+        .option("-os, --os [os]", "OS to build for (win,mac,linux)")
         .description("Build the project")
         .action(async (args: {
             output?: string,
@@ -115,15 +115,18 @@ export function RegisterBuildCommand() {
             var distIndex = path.join(distPath, "index.js");
 
             if (project.build?.compress) {
+                console.log("Compressing scripts...");
                 // minify js
                 await new ShellProcess({
                     path: "npx",
                     args: ["terser", "--compress", "--mangle", "--output", path.join(distPath, "index.min.js"), path.join(distPath, "index.js")],
                     cwd: process.cwd()
                 }).run(console.log, console.error);
+                console.log("Compressing scripts complete");
             }
 
             if (project.build?.bundle) {
+                console.log("Bundling scripts...");
                 var osList = {
                     'lin': 'node16-alpine-x64',
                     'linux': "node16-alpine-x64",
@@ -140,6 +143,7 @@ export function RegisterBuildCommand() {
                 }).run(console.log, console.error);
                 distPath = path.join(outputDir, "bundle");
                 distIndex = path.join(distPath, "index");
+                console.log("Bundling scripts complete");
             }
             else {
                 distIndex = path.join(distPath, "index.js");
@@ -153,6 +157,16 @@ export function RegisterBuildCommand() {
                 fs.copyFileSync(path.join(outputDir, "package.json"), path.join(distPath, "package.json"));
                 // copy package-lock.json
                 fs.copyFileSync(path.join(outputDir, "package-lock.json"), path.join(distPath, "package-lock.json"));
+            }
+
+            if (Array.isArray(project.resources)) {
+                for (var resource of project.resources) {
+                    var resDestPath = resource.dest ? path.resolve(resource.dest) : path.join(distPath, resource.path);
+                    var resSrcPath = path.resolve(resource.path);
+                    if (fs.existsSync(resSrcPath)) {
+                        fs.cpSync(resSrcPath, resDestPath, { recursive: true });
+                    }
+                }
             }
 
             if (project.build?.mode == FastApiBuildMode.DockerFile) {

@@ -17,7 +17,7 @@ function RegisterBuildCommand() {
         .option("-p, --project [path]", "Path to project file")
         .option("-o, --output [path]", "Output directory")
         .option("-d, --debug", "Debug mode")
-        .option("-os, --os [os]", "OS to build for")
+        .option("-os, --os [os]", "OS to build for (win,mac,linux)")
         .description("Build the project")
         .action(async (args) => {
         var _a, _b, _c, _d, _e, _f;
@@ -106,14 +106,17 @@ function RegisterBuildCommand() {
         var distPath = path_1.default.join(outputDir, "dist");
         var distIndex = path_1.default.join(distPath, "index.js");
         if ((_a = project.build) === null || _a === void 0 ? void 0 : _a.compress) {
+            console.log("Compressing scripts...");
             // minify js
             await new cmd_execute_1.ShellProcess({
                 path: "npx",
                 args: ["terser", "--compress", "--mangle", "--output", path_1.default.join(distPath, "index.min.js"), path_1.default.join(distPath, "index.js")],
                 cwd: process.cwd()
             }).run(console.log, console.error);
+            console.log("Compressing scripts complete");
         }
         if ((_b = project.build) === null || _b === void 0 ? void 0 : _b.bundle) {
+            console.log("Bundling scripts...");
             var osList = {
                 'lin': 'node16-alpine-x64',
                 'linux': "node16-alpine-x64",
@@ -130,6 +133,7 @@ function RegisterBuildCommand() {
             }).run(console.log, console.error);
             distPath = path_1.default.join(outputDir, "bundle");
             distIndex = path_1.default.join(distPath, "index");
+            console.log("Bundling scripts complete");
         }
         else {
             distIndex = path_1.default.join(distPath, "index.js");
@@ -144,6 +148,15 @@ function RegisterBuildCommand() {
             fs_1.default.copyFileSync(path_1.default.join(outputDir, "package.json"), path_1.default.join(distPath, "package.json"));
             // copy package-lock.json
             fs_1.default.copyFileSync(path_1.default.join(outputDir, "package-lock.json"), path_1.default.join(distPath, "package-lock.json"));
+        }
+        if (Array.isArray(project.resources)) {
+            for (var resource of project.resources) {
+                var resDestPath = resource.dest ? path_1.default.resolve(resource.dest) : path_1.default.join(distPath, resource.path);
+                var resSrcPath = path_1.default.resolve(resource.path);
+                if (fs_1.default.existsSync(resSrcPath)) {
+                    fs_1.default.cpSync(resSrcPath, resDestPath, { recursive: true });
+                }
+            }
         }
         if (((_f = project.build) === null || _f === void 0 ? void 0 : _f.mode) == FastApiBuildMode_1.FastApiBuildMode.DockerFile) {
             var npmrcPath = path_1.default.join(sourceDir, ".npmrc");

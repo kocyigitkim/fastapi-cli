@@ -4,6 +4,7 @@ import { FastApiRoute } from "./FastApiRoute";
 import { FastApiRouteType } from "./FastApiRouteType";
 import fs from 'fs'
 import path from 'path'
+import { FastApiResource } from "./FastApiResource";
 
 export class FastApiProject {
     public name: string;
@@ -11,6 +12,7 @@ export class FastApiProject {
     public deps?: FastApiDependency[];
     public routers: FastApiRoute[];
     public build?: FastApiBuild;
+    public resources?: FastApiResource[];
     public static open(data: Buffer | string): FastApiProject {
         var js = data instanceof Buffer ? data.toString() : data;
         var project = JSON.parse(js);
