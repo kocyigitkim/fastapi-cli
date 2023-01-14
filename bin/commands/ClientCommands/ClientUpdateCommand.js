@@ -10,7 +10,7 @@ const path_1 = __importDefault(require("path"));
 const axios_1 = __importDefault(require("axios"));
 function InitClientUpdateCommand(parent) {
     parent.command("update")
-        .option("-u, --url", "Enter the fast api url for retrieving client definitions and types")
+        .option("-u, --url [url]", "Enter the fast api url for retrieving client definitions and types")
         .option("-t, --typescript", "Enable typescript support")
         .option("-o, --output [path]", "Enter the output path for the client script and types")
         .option("-w, --watch", "Enable watch mode")

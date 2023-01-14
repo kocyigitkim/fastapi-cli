@@ -55,8 +55,8 @@ function RegisterInitCommand() {
             }
         ];
         project.build = new FastApiBuild_1.FastApiBuild();
-        project.build.bundle = true;
-        project.build.compress = true;
+        project.build.bundle = false;
+        project.build.compress = false;
         project.build.mode = FastApiBuildMode_1.FastApiBuildMode.Default;
         project.build.output = "dist";
         project.routers = [
