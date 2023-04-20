@@ -14,14 +14,12 @@ export function RegisterWatchCommand() {
         .option("-d, --debug", "debug the server")
         .description("[Under construction] Watch fast api server or run in development mode")
         .action(async (args) => {
-            console.log("Under construction");
-            // process.exit(0);
-            // return;
             var port = args.port;
             // ? Load Package.json
             const packageJson = JSON.parse(fs.readFileSync(path.join(process.cwd(), "package.json"), 'utf-8'));
             // ? Load fastapi.json
             const fastapiJson: FastApiProject = JSON.parse(fs.readFileSync(path.join(process.cwd(), "fastapi.json"), 'utf-8'));
+            const outputFileName = path.join(process.cwd(), fastapiJson.build?.output || "build", "index.js");
 
             if (!port && fastapiJson) {
                 port = fastapiJson.port;
@@ -32,52 +30,31 @@ export function RegisterWatchCommand() {
                 process.exit(-1);
             }
 
+            process.env.PORT = port.toString();
+
             // ? Run project
             console.log("Running...");
-            var proc: ShellProcess = null;
             var isDebug = args.debug;
             var isFirstRun = true;
             async function startServer() {
-                if (proc) {
-                    (proc as any).currentProcess.kill("SIGTERM");
-                    // wait for process to exit
-                    while (!(proc as any).currentProcess.killed) {
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                    }
-                }
-
-                var outputFileName = await CleanAndBuild(packageJson, fastapiJson, isFirstRun);
+                await CleanAndBuild(packageJson, fastapiJson, isFirstRun);
                 isFirstRun = false;
+                var serverProcess = null;
+                const watchFolderPath = path.join(process.cwd(), "src");
+                const watchFolder = fs.watch(watchFolderPath, { recursive: true }, async (eventType, filename) => {
+                    if (eventType == "change" || eventType == 'rename') {
+                        //Kill current process
+                        console.clear();
+                        console.log("Restarting...");
+                        serverProcess.kill();
+                        // ? Rebuild
+                        await CleanAndBuild(packageJson, fastapiJson, isFirstRun);
+                        // ? Run project
+                        serverProcess = await ExecuteServer(outputFileName);
+                    }
+                });
 
-                proc = new ShellProcess({
-                    path: "nodemon",
-                    args: isDebug ? (
-                        ["-x", '"fastapi start -d"', "-w", "src", "-w", "fastapi.json", "-w", "package.json", "-w", "tsconfig.json", "-e", "ts,json,js"]
-                    ) : (["start", "--watch", "src", "--ext", "ts,js,json", "--exec", "fastapi"]),
-                    cwd: process.cwd(),
-                    env: {
-                        PORT: port,
-                        NODE_ENV: "development"
-                    }
-                } as any);
-                await proc.run((d) => {
-                    var lines = (d || "").split("\n");
-                    for (var i = 0; i < lines.length; i++) {
-                        var line = lines[i];
-                        if (line.trim().length > 0) {
-                            console.log(line);
-                        }
-                    }
-                }, (d) => {
-                    var lines = (d || "").split("\n");
-                    for (var i = 0; i < lines.length; i++) {
-                        var line = lines[i];
-                        if (line.trim().length > 0) {
-                            console.error(line);
-                        }
-                    }
-                }).catch(console.error);
-
+                serverProcess = await ExecuteServer(outputFileName);
             }
             console.log("Watching...");
             console.log(path.join(process.cwd(), "src"));
@@ -125,3 +102,18 @@ async function CleanAndBuild(packageJson: any, fastapiJson: FastApiProject, isFi
 
     }
 }
+async function ExecuteServer(outputFileName: string): Promise<any> {
+    var outputDir = path.dirname(outputFileName);
+    console.log("Executing file: " + outputFileName);
+    var serverProcess = spawn("node", [
+        outputFileName
+    ], {
+        argv0: "--inspect",
+        cwd: outputDir,
+        stdio: "inherit",
+        detached: true,
+        shell: true
+    });
+    return serverProcess;
+}
+

@@ -28,26 +28,15 @@ export class FastApiProject {
     public buildTSConfig() {
         return JSON.stringify({
             "compilerOptions": {
-                "target": "es2017",
-                "module": "commonjs",
+                "target": "ESNext",
+                "module": "CommonJS",
                 "rootDir": "./src",
                 "sourceMap": true,
-                "outDir": "dist",
-                "noImplicitUseStrict": true,
-                "declaration": true,
-                "declarationMap": true,
-                "declarationDir": "dist/ts-types",
+                "outDir": "./dist",
                 "esModuleInterop": true,
                 "forceConsistentCasingInFileNames": true,
                 "strict": false,
-                "experimentalDecorators": true,
-                "emitDecoratorMetadata": true,
-                "skipLibCheck": true,
-                "plugins": [
-                    {
-                        "transform": "tst-reflect-transformer"
-                    }
-                ]
+                "skipLibCheck": true
             }
         }, null, 2);
     }
@@ -62,8 +51,6 @@ ${this.routers.filter(r => r.type == FastApiRouteType.WEBSOCKET).map(r => {
             return `options.socketRouterDirs.push(__dirname + "/${r.path.replace(/^\//, "")}");`;
         }).join("\n")}
 ${this.routers.some(r => r.type == FastApiRouteType.WEBSOCKET) ? `options.sockets = new NextSocketOptions();` : ``}
-options.debug = process.env.NODE_ENV === "development";
-options.port = parseInt(process.env.PORT);
 const app = new NextApplication(options);
 
 async function main() {
@@ -123,45 +110,26 @@ ENTRYPOINT ["node", "index"]`
         fs.writeFileSync(path.join(distPath, "Dockerfile"), dockerFile);
     }
     public buildVSCodeLaunch() {
-        return `{
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Debug",
-            "type": "node",
-            "request": "launch",
-            "program": "\${workspaceFolder}/src/index.ts",
-            "preLaunchTask": "npm: prepare-debug",
-            "cwd": "\${workspaceFolder}",
-            "env": {
-                "NODE_ENV": "development",
-                "PORT": "5000",
-                "DEBUG": "true"
-            },
-            "sourceMaps": true,
-            "outFiles": [
-                "\${workspaceFolder}/dist/**/*.js"
+        return JSON.stringify({
+            "version": "0.2.0",
+            "configurations": [
+                {
+                    "type": "node",
+                    "request": "launch",
+                    "name": "Debug",
+                    "skipFiles": [
+                        "<node_internals>/**"
+                    ],
+                    "runtimeExecutable": "fastapi",
+                    "args": [
+                        "watch"
+                    ],
+                    "env": {
+                        "PORT": "5000"
+                    }
+                }
             ]
-        }
-    ]
-}`
-    }
-    public buildVSCodeTasks() {
-        return `{
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "npm: prepare-debug",
-            "type": "npm",
-            "script": "prepare-debug",
-            "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        }
-    ]
-}`
+        }, null, 2)
     }
 }
 

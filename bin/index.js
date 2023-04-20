@@ -8,7 +8,9 @@ const InitCommand_1 = require("./commands/InitCommand");
 const WatchCommand_1 = require("./commands/WatchCommand");
 const CreateCommand_1 = require("./commands/CreateCommand");
 const ClientCommands_1 = require("./commands/ClientCommands");
+const DebugCommand_1 = require("./commands/DebugCommand");
 async function main() {
+    (0, DebugCommand_1.RegisterDebugCommand)();
     (0, CreateCommand_1.RegisterCreateCommand)();
     (0, InitCommand_1.RegisterInitCommand)();
     (0, BuildCommand_1.RegisterBuildCommand)();

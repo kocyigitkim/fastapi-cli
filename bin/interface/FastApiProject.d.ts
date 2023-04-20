@@ -17,6 +17,5 @@ export declare class FastApiProject {
     buildHelloWorld(): string;
     makeDockerFile(distPath: string, distIndex: string, npmrcPath: string): void;
     buildVSCodeLaunch(): string;
-    buildVSCodeTasks(): string;
 }
 //# sourceMappingURL=FastApiProject.d.ts.map

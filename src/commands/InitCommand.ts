@@ -97,20 +97,16 @@ export function RegisterInitCommand() {
                 scripts: {
                     "start": "fastapi start",
                     "build": "fastapi build",
-                    "prepare-debug": "fastapi build -d"
                 },
                 keywords: [],
                 dependencies: {
                     "fastapi-next": "latest",
                     "express": "latest",
-                    "tst-reflect": "latest"
                 },
                 devDependencies: {
                     "@types/express": "latest",
                     "@types/node": "latest",
                     "typescript": "latest",
-                    "tst-reflect-transformer": "latest",
-                    "ttypescript": "latest"
                 }
             };
 
@@ -134,9 +130,6 @@ export function RegisterInitCommand() {
             }
             if (!fs.existsSync(path.join(outputDir, ".vscode", "launch.json"))) {
                 fs.writeFileSync(path.join(outputDir, ".vscode", "launch.json"), project.buildVSCodeLaunch());
-            }
-            if (!fs.existsSync(path.join(outputDir, ".vscode", "tasks.json"))) {
-                fs.writeFileSync(path.join(outputDir, ".vscode", "tasks.json"), project.buildVSCodeTasks());
             }
 
             console.log("Installing dependencies...");

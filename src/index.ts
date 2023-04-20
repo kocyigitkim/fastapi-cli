@@ -6,9 +6,11 @@ import { RegisterInitCommand } from "./commands/InitCommand";
 import { RegisterWatchCommand } from "./commands/WatchCommand";
 import { RegisterCreateCommand } from "./commands/CreateCommand";
 import { ClientCommands } from "./commands/ClientCommands";
+import { RegisterDebugCommand } from "./commands/DebugCommand";
 
 async function main() {
 
+    RegisterDebugCommand();
     RegisterCreateCommand();
     RegisterInitCommand();
     RegisterBuildCommand();
