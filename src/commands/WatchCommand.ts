@@ -36,6 +36,7 @@ export function RegisterWatchCommand() {
             console.log("Running...");
             var isDebug = args.debug;
             var isFirstRun = true;
+            var restartCount = 0;
             async function startServer() {
                 await CleanAndBuild(packageJson, fastapiJson, isFirstRun);
                 isFirstRun = false;
@@ -43,6 +44,14 @@ export function RegisterWatchCommand() {
                 const watchFolderPath = path.join(process.cwd(), "src");
                 const watchFolder = fs.watch(watchFolderPath, { recursive: true }, async (eventType, filename) => {
                     if (eventType == "change" || eventType == 'rename') {
+                        var c = restartCount;
+                        if (restartCount > 0) {
+                            console.log(`Waiting previous restart. current queue: ${restartCount}`);
+                            while (c == restartCount && c > 0 && restartCount > 0) {
+                                await new Promise(resolve => setTimeout(resolve, 1000));
+                            }
+                        }
+                        restartCount++;
                         //Kill current process
                         console.clear();
                         console.log("Restarting...");
@@ -51,6 +60,7 @@ export function RegisterWatchCommand() {
                         await CleanAndBuild(packageJson, fastapiJson, isFirstRun);
                         // ? Run project
                         serverProcess = await ExecuteServer(outputFileName);
+                        restartCount--;
                     }
                 });
 

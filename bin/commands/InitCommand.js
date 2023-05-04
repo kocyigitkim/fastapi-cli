@@ -16,14 +16,17 @@ function RegisterInitCommand() {
     commander_1.program.command("init")
         .option("-n, --name [name]", "Name of the project")
         .option("-o, --output [path]", "Output directory")
+        .option("-h, --here [value]", "Initialize project in current directory")
         .description("Create a new project")
         .action(async (args) => {
+        var _a;
         if (!args)
             args = {};
         if (!(args === null || args === void 0 ? void 0 : args.output)) {
             args.output = process.cwd();
         }
         var projectDir = path_1.default.join(args.output, args.name);
+        const isHere = (_a = args.here) !== null && _a !== void 0 ? _a : false;
         if (!(args === null || args === void 0 ? void 0 : args.name)) {
             // find package.json and retrieve name from package.json
             try {
@@ -33,8 +36,10 @@ function RegisterInitCommand() {
             catch (err) {
                 console.error("Could not find package.json in current directory");
                 if (args.name) {
-                    fs_1.default.mkdirSync(projectDir, { recursive: true });
-                    process.chdir(projectDir);
+                    if (!isHere) {
+                        fs_1.default.mkdirSync(projectDir, { recursive: true });
+                        process.chdir(projectDir);
+                    }
                     await new cmd_execute_1.ShellProcess({
                         path: "npm",
                         args: ["init", "-y"]

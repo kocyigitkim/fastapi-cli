@@ -11,16 +11,19 @@ export function RegisterInitCommand() {
     program.command("init")
         .option("-n, --name [name]", "Name of the project")
         .option("-o, --output [path]", "Output directory")
+        .option("-h, --here [value]", "Initialize project in current directory")
         .description("Create a new project")
         .action(async (args: {
             name?: string
             output?: string
+            here?: boolean
         }) => {
             if (!args) args = {};
             if (!args?.output) {
                 args.output = process.cwd();
             }
             var projectDir = path.join(args.output, args.name);
+            const isHere = args.here ?? false;
             if (!args?.name) {
                 // find package.json and retrieve name from package.json
                 try {
@@ -29,8 +32,10 @@ export function RegisterInitCommand() {
                 } catch (err) {
                     console.error("Could not find package.json in current directory");
                     if (args.name) {
-                        fs.mkdirSync(projectDir, { recursive: true });
-                        process.chdir(projectDir);
+                        if (!isHere) {
+                            fs.mkdirSync(projectDir, { recursive: true });
+                            process.chdir(projectDir);
+                        }
                         await new ShellProcess({
                             path: "npm",
                             args: ["init", "-y"]
