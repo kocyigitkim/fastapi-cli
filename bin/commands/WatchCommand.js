@@ -31,7 +31,8 @@ function RegisterWatchCommand() {
             console.error("Could not find fastapi.json in current directory");
             process.exit(-1);
         }
-        process.env.PORT = port.toString();
+        if (!process.env.PORT)
+            process.env.PORT = port.toString();
         // ? Run project
         console.log("Running...");
         var isDebug = args.debug;
@@ -120,7 +121,8 @@ async function ExecuteServer(outputFileName) {
         cwd: outputDir,
         stdio: "inherit",
         detached: true,
-        shell: true
+        shell: true,
+        env: process.env
     });
     return serverProcess;
 }

@@ -30,7 +30,7 @@ export function RegisterWatchCommand() {
                 process.exit(-1);
             }
 
-            process.env.PORT = port.toString();
+            if (!process.env.PORT) process.env.PORT = port.toString();
 
             // ? Run project
             console.log("Running...");
@@ -122,7 +122,8 @@ async function ExecuteServer(outputFileName: string): Promise<any> {
         cwd: outputDir,
         stdio: "inherit",
         detached: true,
-        shell: true
+        shell: true,
+        env: process.env
     });
     return serverProcess;
 }
