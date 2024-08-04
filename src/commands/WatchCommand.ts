@@ -20,6 +20,7 @@ export function RegisterWatchCommand() {
             // ? Load fastapi.json
             const fastapiJson: FastApiProject = JSON.parse(fs.readFileSync(path.join(process.cwd(), "fastapi.json"), 'utf-8'));
             const outputFileName = path.join(process.cwd(), fastapiJson.build?.output || "build", "index.js");
+            const projectDir = path.join(process.cwd());
 
             if (!port && fastapiJson) {
                 port = fastapiJson.port;
@@ -59,12 +60,12 @@ export function RegisterWatchCommand() {
                         // ? Rebuild
                         await CleanAndBuild(packageJson, fastapiJson, isFirstRun);
                         // ? Run project
-                        serverProcess = await ExecuteServer(outputFileName);
+                        serverProcess = await ExecuteServer(projectDir, outputFileName);
                         restartCount--;
                     }
                 });
 
-                serverProcess = await ExecuteServer(outputFileName);
+                serverProcess = await ExecuteServer(projectDir, outputFileName);
             }
             console.log("Watching...");
             console.log(path.join(process.cwd(), "src"));
@@ -112,14 +113,14 @@ async function CleanAndBuild(packageJson: any, fastapiJson: FastApiProject, isFi
 
     }
 }
-async function ExecuteServer(outputFileName: string): Promise<any> {
+async function ExecuteServer(projectDir: string, outputFileName: string): Promise<any> {
     var outputDir = path.dirname(outputFileName);
     console.log("Executing file: " + outputFileName);
     var serverProcess = spawn("node", [
         outputFileName
     ], {
         argv0: "--inspect",
-        cwd: outputDir,
+        cwd: projectDir,
         stdio: "inherit",
         detached: true,
         shell: true,
