@@ -1,6 +1,6 @@
 {
   "name": "fastapi-cli",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "description": "Fast Api Command Line Tool",
   "main": "bin/index.js",
   "bin": {

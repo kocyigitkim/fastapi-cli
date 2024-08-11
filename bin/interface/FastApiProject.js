@@ -38,17 +38,18 @@ class FastApiProject {
     buildIndex() {
         return `import { NextApplication, NextFileResolverPlugin, NextOptions } from "fastapi-next";
 ${this.routers.some(r => r.type === FastApiRouteType_1.FastApiRouteType.WEBSOCKET) ? `import { NextSocketOptions } from "fastapi-next";` : ""}
-const options = new NextOptions();
-${this.routers.filter(r => r.type == FastApiRouteType_1.FastApiRouteType.REST).map(r => {
-            return `options.routerDirs.push(__dirname + "/${r.path.replace(/^\//, "")}");`;
-        }).join("\n")}
-${this.routers.filter(r => r.type == FastApiRouteType_1.FastApiRouteType.WEBSOCKET).map(r => {
-            return `options.socketRouterDirs.push(__dirname + "/${r.path.replace(/^\//, "")}");`;
-        }).join("\n")}
-${this.routers.some(r => r.type == FastApiRouteType_1.FastApiRouteType.WEBSOCKET) ? `options.sockets = new NextSocketOptions();` : ``}
-const app = new NextApplication(options);
 
 async function main() {
+    const options = new NextOptions();
+    ${this.routers.filter(r => r.type == FastApiRouteType_1.FastApiRouteType.REST).map(r => {
+            return `options.routerDirs.push(__dirname + "/${r.path.replace(/^\//, "")}");`;
+        }).join("\n")}
+    ${this.routers.filter(r => r.type == FastApiRouteType_1.FastApiRouteType.WEBSOCKET).map(r => {
+            return `options.socketRouterDirs.push(__dirname + "/${r.path.replace(/^\//, "")}");`;
+        }).join("\n")}
+    ${this.routers.some(r => r.type == FastApiRouteType_1.FastApiRouteType.WEBSOCKET) ? `options.sockets = new NextSocketOptions();` : ``}
+    const app = new NextApplication(options);
+
     // ? Health Check
     app.enableHealthCheck();
 
@@ -76,6 +77,8 @@ export default async function (ctx: NextContext<any>){
         var _a;
         var isBundle = Boolean((_a = this.build) === null || _a === void 0 ? void 0 : _a.bundle);
         var dockerFile = "";
+        const nodeBuildVersion = "latest";
+        const nodeReleaseVersion = "slim";
         var environments = [
             "PORT=5000",
             "NODE_ENV=production"
@@ -89,15 +92,16 @@ RUN chmod +x index\nENTRYPOINT ./index
 `;
         }
         else {
-            dockerFile = `FROM node:16 as build
+            dockerFile = `FROM node:${nodeBuildVersion} as build
 WORKDIR /app
 COPY package.json .
 RUN npm install --production --legacy-peer-deps
 
-FROM node:16-slim
+FROM node:${nodeReleaseVersion}
 ${environments.map(e => `ENV ${e}`).join("\n")}
 WORKDIR /app
 COPY --from=build /app .
+COPY --from=build /app/node_modules ./node_modules
 COPY . .
 ENTRYPOINT ["node", "index"]`;
         }

@@ -10,6 +10,7 @@ const fs_1 = __importDefault(require("fs"));
 const cmd_execute_1 = require("cmd-execute");
 const child_process_1 = require("child_process");
 const DoNothing = () => { };
+const ListeningServers = [];
 function RegisterWatchCommand() {
     commander_1.program.command("watch")
         .alias("dev")
@@ -42,9 +43,8 @@ function RegisterWatchCommand() {
         async function startServer() {
             await CleanAndBuild(packageJson, fastapiJson, isFirstRun);
             isFirstRun = false;
-            var serverProcess = null;
             const watchFolderPath = path_1.default.join(process.cwd(), "src");
-            const watchFolder = fs_1.default.watch(watchFolderPath, { recursive: true }, async (eventType, filename) => {
+            async function onWatch(eventType, filename) {
                 if (eventType == "change" || eventType == 'rename') {
                     var c = restartCount;
                     if (restartCount > 0) {
@@ -57,15 +57,36 @@ function RegisterWatchCommand() {
                     //Kill current process
                     console.clear();
                     console.log("Restarting...");
-                    serverProcess.kill();
                     // ? Rebuild
                     await CleanAndBuild(packageJson, fastapiJson, isFirstRun);
                     // ? Run project
-                    serverProcess = await ExecuteServer(projectDir, outputFileName);
+                    await ExecuteServer(projectDir, outputFileName, port);
+                    // assign watcher to server process
+                    ListeningServers.forEach(x => {
+                        if (x.port == port) {
+                            registerWatcher().then(watcher => {
+                                x.watcher = watcher;
+                            });
+                        }
+                    });
                     restartCount--;
                 }
+            }
+            async function registerWatcher() {
+                const watchFolder = fs_1.default.watch(watchFolderPath, { recursive: true }, async (eventType, filename) => {
+                    await onWatch(eventType, filename);
+                });
+                return watchFolder;
+            }
+            await ExecuteServer(projectDir, outputFileName, port);
+            // assign watcher to server process
+            ListeningServers.forEach(x => {
+                if (x.port == port) {
+                    registerWatcher().then(watcher => {
+                        x.watcher = watcher;
+                    });
+                }
             });
-            serverProcess = await ExecuteServer(projectDir, outputFileName);
         }
         console.log("Watching...");
         console.log(path_1.default.join(process.cwd(), "src"));
@@ -112,19 +133,74 @@ async function CleanAndBuild(packageJson, fastapiJson, isFirstRun) {
         return packageJson.main;
     }
 }
-async function ExecuteServer(projectDir, outputFileName) {
-    var outputDir = path_1.default.dirname(outputFileName);
-    console.log("Executing file: " + outputFileName);
-    var serverProcess = (0, child_process_1.spawn)("node", [
-        outputFileName
-    ], {
-        argv0: "--inspect",
+async function ExecuteServer(projectDir, outputFileName, port) {
+    const portStatus = await CheckIsPortUsing(port);
+    if (portStatus.busy) {
+        if (portStatus.listeingOn) {
+            await TerminateOldProcess();
+        }
+        else {
+            console.error(`Port ${port} is already in use by another process`);
+            process.exit(-1);
+        }
+    }
+    console.log("Running server...");
+    var serverProcess = await RunServer(projectDir, outputFileName, port);
+    serverProcess.on("exit", () => {
+        console.log("Server exited");
+    });
+}
+async function RunServer(projectDir, entrypointFile, port) {
+    var serverProcess = (0, child_process_1.spawn)("node", [entrypointFile], {
+        argv0: "inspect",
         cwd: projectDir,
         stdio: "inherit",
-        detached: true,
-        shell: true,
-        env: process.env
+        detached: false,
+        env: Object.assign(Object.assign({}, process.env), { PORT: port.toString() })
+    });
+    ListeningServers.push({
+        port: port,
+        process: serverProcess
     });
     return serverProcess;
+}
+async function CheckIsPortUsing(port) {
+    const isAvailable = await CheckIsPortAvailable(port);
+    const isExistsOnListening = ListeningServers.find(x => x.port == port);
+    return {
+        busy: !isAvailable || isExistsOnListening,
+        listeingOn: isExistsOnListening
+    };
+}
+async function CheckIsPortAvailable(port) {
+    return new Promise((resolve) => {
+        const server = require('net').createServer();
+        server.listen(port, () => {
+            server.close();
+            resolve(true);
+        });
+        server.on('error', () => {
+            resolve(false);
+        });
+    });
+}
+async function TerminateOldProcess() {
+    while (ListeningServers.length > 0) {
+        var server = ListeningServers[0];
+        if (server.watcher) {
+            console.log(`Closing watcher on port ${server.port}`);
+            server.watcher.close();
+        }
+        console.log(`Killing server on port ${server.port}, pid: ${server.process.pid}`);
+        if (server.process.kill(9)) {
+            console.log(`Server on port ${server.port} killed, pid: ${server.process.pid}`);
+            ListeningServers.shift();
+        }
+        else {
+            console.log(`Failed to kill server on port ${server.port}, pid: ${server.process.pid}`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }
+    return ListeningServers.length == 0;
 }
 //# sourceMappingURL=WatchCommand.js.map

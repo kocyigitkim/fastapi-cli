@@ -17,10 +17,9 @@ function RegisterBuildCommand() {
         .option("-p, --project [path]", "Path to project file")
         .option("-o, --output [path]", "Output directory")
         .option("-d, --debug", "Debug mode")
-        .option("-os, --os [os]", "OS to build for (win,mac,linux)")
         .description("Build the project")
         .action(async (args) => {
-        var _a, _b, _c, _d, _e, _f;
+        var _a, _b, _c, _d, _e;
         if (!args)
             args = {};
         if (args === null || args === void 0 ? void 0 : args.project) {
@@ -116,33 +115,35 @@ function RegisterBuildCommand() {
             console.log("Compressing scripts complete");
         }
         if ((_b = project.build) === null || _b === void 0 ? void 0 : _b.bundle) {
-            console.log("Bundling scripts...");
-            var osList = {
-                'lin': 'node16-alpine-x64',
-                'linux': "node16-alpine-x64",
-                'win': "node16-win-x64",
-                'windows': "node16-win-x64",
-                'mac': "node16-macos-x64",
-                'macos': "node16-macos-x64",
-            };
-            // bundle js with node modules into one file
-            await new cmd_execute_1.ShellProcess({
-                path: "npx",
-                args: ["pkg", "-t", osList[args.os || "linux"], ((_c = project.build) === null || _c === void 0 ? void 0 : _c.compress) ? "dist/index.min.js" : "dist/index.js", "--output", "bundle/index"],
-                cwd: process.cwd()
-            }).run(console.log, console.error);
-            distPath = path_1.default.join(outputDir, "bundle");
-            distIndex = path_1.default.join(distPath, "index");
-            console.log("Bundling scripts complete");
+            console.error("Bundling is removed from this version");
+            // console.log("Bundling scripts...");
+            // var osList = {
+            //     'lin': 'node18-alpine-x64',
+            //     'linux': "node18-alpine-x64",
+            //     'win': "node18-win-x64",
+            //     'windows': "node18-win-x64",
+            //     'mac': "node18-macos-x64",
+            //     'macos': "node18-macos-x64",
+            //     'darwin': "node18-macos-x64"
+            // }
+            // // bundle js with node modules into one file
+            // await new ShellProcess({
+            //     path: "npx",
+            //     args: ["pkg", "-t", osList[args.os || "linux"], project.build?.compress ? "dist/index.min.js" : "dist/index.js", "--output", "bundle/index"],
+            //     cwd: process.cwd()
+            // }).run(console.log, console.error);
+            // distPath = path.join(outputDir, "bundle");
+            // distIndex = path.join(distPath, "index");
+            // console.log("Bundling scripts complete");
         }
         else {
             distIndex = path_1.default.join(distPath, "index.js");
             // remove current index.js
-            if (fs_1.default.existsSync(path_1.default.join(distPath, "index.js")) && ((_d = project.build) === null || _d === void 0 ? void 0 : _d.compress)) {
+            if (fs_1.default.existsSync(path_1.default.join(distPath, "index.js")) && ((_c = project.build) === null || _c === void 0 ? void 0 : _c.compress)) {
                 fs_1.default.unlinkSync(path_1.default.join(distPath, "index.js"));
             }
             // rename index.min.js to index.js
-            if ((_e = project.build) === null || _e === void 0 ? void 0 : _e.compress)
+            if ((_d = project.build) === null || _d === void 0 ? void 0 : _d.compress)
                 fs_1.default.renameSync(path_1.default.join(outputDir, "dist", "index.min.js"), distIndex);
             // copy package.json
             fs_1.default.copyFileSync(path_1.default.join(outputDir, "package.json"), path_1.default.join(distPath, "package.json"));
@@ -158,7 +159,7 @@ function RegisterBuildCommand() {
                 }
             }
         }
-        if (((_f = project.build) === null || _f === void 0 ? void 0 : _f.mode) == FastApiBuildMode_1.FastApiBuildMode.DockerFile) {
+        if (((_e = project.build) === null || _e === void 0 ? void 0 : _e.mode) == FastApiBuildMode_1.FastApiBuildMode.DockerFile) {
             var npmrcPath = path_1.default.join(sourceDir, ".npmrc");
             var globalNpmrcPath = path_1.default.resolve('~/.npmrc');
             if (!fs_1.default.existsSync(npmrcPath) && !fs_1.default.existsSync(globalNpmrcPath)) {

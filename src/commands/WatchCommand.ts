@@ -3,9 +3,17 @@ import path from 'path'
 import fs from 'fs'
 import { ShellProcess } from "cmd-execute";
 import { FastApiProject } from "interface/FastApiProject";
-import { spawn } from "child_process";
+import { ChildProcess, spawn } from "child_process";
 
 const DoNothing = () => { };
+
+interface ServerInfo {
+    port: number;
+    process: ChildProcess;
+    watcher?: fs.FSWatcher;
+}
+
+const ListeningServers: ServerInfo[] = [];
 
 export function RegisterWatchCommand() {
     program.command("watch")
@@ -41,9 +49,9 @@ export function RegisterWatchCommand() {
             async function startServer() {
                 await CleanAndBuild(packageJson, fastapiJson, isFirstRun);
                 isFirstRun = false;
-                var serverProcess = null;
                 const watchFolderPath = path.join(process.cwd(), "src");
-                const watchFolder = fs.watch(watchFolderPath, { recursive: true }, async (eventType, filename) => {
+
+                async function onWatch(eventType, filename) {
                     if (eventType == "change" || eventType == 'rename') {
                         var c = restartCount;
                         if (restartCount > 0) {
@@ -56,16 +64,40 @@ export function RegisterWatchCommand() {
                         //Kill current process
                         console.clear();
                         console.log("Restarting...");
-                        serverProcess.kill();
                         // ? Rebuild
                         await CleanAndBuild(packageJson, fastapiJson, isFirstRun);
                         // ? Run project
-                        serverProcess = await ExecuteServer(projectDir, outputFileName);
+                        await ExecuteServer(projectDir, outputFileName, port);
+                        // assign watcher to server process
+                        ListeningServers.forEach(x => {
+                            if (x.port == port) {
+                                registerWatcher().then(watcher => {
+                                    x.watcher = watcher;
+                                });
+                            }
+                        });
                         restartCount--;
                     }
-                });
+                }
 
-                serverProcess = await ExecuteServer(projectDir, outputFileName);
+                async function registerWatcher() {
+                    const watchFolder = fs.watch(watchFolderPath, { recursive: true }, async (eventType, filename) => {
+                        await onWatch(eventType, filename);
+                    });
+                    return watchFolder;
+                }
+
+
+
+                await ExecuteServer(projectDir, outputFileName, port);
+                // assign watcher to server process
+                ListeningServers.forEach(x => {
+                    if (x.port == port) {
+                        registerWatcher().then(watcher => {
+                            x.watcher = watcher;
+                        });
+                    }
+                });
             }
             console.log("Watching...");
             console.log(path.join(process.cwd(), "src"));
@@ -113,19 +145,82 @@ async function CleanAndBuild(packageJson: any, fastapiJson: FastApiProject, isFi
 
     }
 }
-async function ExecuteServer(projectDir: string, outputFileName: string): Promise<any> {
-    var outputDir = path.dirname(outputFileName);
-    console.log("Executing file: " + outputFileName);
-    var serverProcess = spawn("node", [
-        outputFileName
-    ], {
-        argv0: "--inspect",
+
+async function ExecuteServer(projectDir: string, outputFileName: string, port?: number) {
+    const portStatus = await CheckIsPortUsing(port);
+    if (portStatus.busy) {
+        if (portStatus.listeingOn) {
+            await TerminateOldProcess();
+        }
+        else {
+            console.error(`Port ${port} is already in use by another process`);
+            process.exit(-1);
+        }
+    }
+
+    console.log("Running server...");
+    var serverProcess = await RunServer(projectDir, outputFileName, port);
+    serverProcess.on("exit", () => {
+        console.log("Server exited");
+    });
+}
+
+async function RunServer(projectDir: string, entrypointFile: string, port: number) {
+    var serverProcess = spawn("node", [entrypointFile], {
+        argv0: "inspect",
         cwd: projectDir,
         stdio: "inherit",
-        detached: true,
-        shell: true,
-        env: process.env
+        detached: false,
+        env: {
+            ...process.env,
+            PORT: port.toString()
+        }
+    });
+    ListeningServers.push({
+        port: port,
+        process: serverProcess
     });
     return serverProcess;
 }
 
+async function CheckIsPortUsing(port: number) {
+    const isAvailable = await CheckIsPortAvailable(port);
+    const isExistsOnListening = ListeningServers.find(x => x.port == port);
+    return {
+        busy: !isAvailable || isExistsOnListening,
+        listeingOn: isExistsOnListening
+    };
+}
+
+async function CheckIsPortAvailable(port: number) {
+    return new Promise<boolean>((resolve) => {
+        const server = require('net').createServer();
+        server.listen(port, () => {
+            server.close();
+            resolve(true);
+        });
+        server.on('error', () => {
+            resolve(false);
+        });
+    });
+}
+
+async function TerminateOldProcess() {
+    while (ListeningServers.length > 0) {
+        var server = ListeningServers[0];
+        if (server.watcher) {
+            console.log(`Closing watcher on port ${server.port}`);
+            server.watcher.close();
+        }
+        console.log(`Killing server on port ${server.port}, pid: ${server.process.pid}`);
+        if (server.process.kill(9)) {
+            console.log(`Server on port ${server.port} killed, pid: ${server.process.pid}`);
+            ListeningServers.shift();
+        }
+        else {
+            console.log(`Failed to kill server on port ${server.port}, pid: ${server.process.pid}`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }
+    return ListeningServers.length == 0;
+}
